@@ -1,8 +1,10 @@
+# Centralised application settings — reads all config from environment variables or .env file.
+
 from pathlib import Path
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-# Resolves to the project root (two levels up from app/core/config.py)
+# Resolves to the project root regardless of the working directory at runtime
 _ENV_FILE = Path(__file__).resolve().parent.parent.parent / ".env"
 
 
@@ -17,4 +19,5 @@ class Settings(BaseSettings):
     LOG_LEVEL: str = "INFO"
 
 
+# Module-level singleton — imported directly wherever config values are needed
 settings = Settings()

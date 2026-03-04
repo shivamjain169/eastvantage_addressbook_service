@@ -1,3 +1,6 @@
+# Business logic layer — orchestrates repository calls, enforces rules,
+# handles errors, and maps failures to appropriate HTTP exceptions.
+
 from fastapi import HTTPException, status
 
 from app.core.logging import get_logger
@@ -29,6 +32,7 @@ class AddressService:
     def get_address(self, address_id: int) -> Address:
         logger.debug("Fetching address: id=%d", address_id)
         address = self._repo.get_by_id(address_id)
+        # Raise 404 if the address does not exist
         if address is None:
             logger.warning("Address not found: id=%d", address_id)
             raise HTTPException(
@@ -40,6 +44,7 @@ class AddressService:
     def update_address(self, address_id: int, payload: AddressUpdate) -> Address:
         logger.info("Updating address: id=%d", address_id)
         address = self._repo.get_by_id(address_id)
+        # Verify existence before attempting the update
         if address is None:
             logger.warning("Update failed — address not found: id=%d", address_id)
             raise HTTPException(
@@ -60,6 +65,7 @@ class AddressService:
     def delete_address(self, address_id: int) -> None:
         logger.info("Deleting address: id=%d", address_id)
         address = self._repo.get_by_id(address_id)
+        # Verify existence before attempting the delete
         if address is None:
             logger.warning("Delete failed — address not found: id=%d", address_id)
             raise HTTPException(
@@ -85,6 +91,7 @@ class AddressService:
         )
         try:
             all_addresses = self._repo.get_all()
+            # Filter in Python using geodesic distance — no raw SQL required
             nearby = [
                 addr
                 for addr in all_addresses

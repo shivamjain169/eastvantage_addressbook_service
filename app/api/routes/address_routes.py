@@ -1,3 +1,6 @@
+# HTTP route definitions for the address resource.
+# Each handler delegates immediately to the service layer — no business logic here.
+
 from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.orm import Session
 
@@ -11,6 +14,7 @@ router = APIRouter(prefix="/addresses", tags=["Addresses"])
 logger = get_logger(__name__)
 
 
+# Dependency: wires the DB session → repository → service for each request
 def get_address_service(db: Session = Depends(get_db)) -> AddressService:
     return AddressService(AddressRepository(db))
 
@@ -60,7 +64,7 @@ def update_address(
 
 @router.delete(
     "/{address_id}",
-    status_code=status.HTTP_204_NO_CONTENT,
+    status_code=status.HTTP_204_NO_CONTENT,  # No body returned on successful delete
     summary="Delete an address",
 )
 def delete_address(
@@ -89,5 +93,6 @@ def get_nearby_addresses(
         longitude,
         radius_km,
     )
+    # Wrap query params into a typed object before passing to the service
     query = NearbyQuery(latitude=latitude, longitude=longitude, radius_km=radius_km)
     return service.get_nearby_addresses(query)

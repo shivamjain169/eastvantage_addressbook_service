@@ -1,3 +1,6 @@
+# Application entry point — creates the FastAPI app, registers middleware,
+# exception handlers, and mounts the versioned router.
+
 from contextlib import asynccontextmanager
 from collections.abc import AsyncGenerator
 
@@ -11,12 +14,14 @@ from app.core.logging import configure_logging, get_logger
 from app.db.base import Base
 from app.db.session import engine
 
+# Initialise logging before any module-level logger is used
 configure_logging()
 logger = get_logger(__name__)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
+    # Create DB tables on startup; yield control; log shutdown
     logger.info("Starting Address Book Service — creating database tables")
     Base.metadata.create_all(bind=engine)
     logger.info("Database tables ready. LOG_LEVEL=%s", settings.LOG_LEVEL)
@@ -32,6 +37,7 @@ app = FastAPI(
 )
 
 
+# Handles Pydantic / JSON validation errors — logs and returns 422
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError) -> JSONResponse:
     logger.warning(
@@ -46,6 +52,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     )
 
 
+# Catches any unhandled exception — prevents stack traces from reaching the client
 @app.exception_handler(Exception)
 async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONResponse:
     logger.error(
@@ -61,6 +68,7 @@ async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONR
     )
 
 
+# Mount address routes under the /api/v1 prefix
 app.include_router(address_router, prefix="/api/v1")
 
 

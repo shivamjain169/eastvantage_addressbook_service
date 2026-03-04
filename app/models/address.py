@@ -1,3 +1,5 @@
+# ORM model for the addresses table — defines columns, types, and auto-managed timestamps.
+
 from datetime import datetime, timezone
 
 from sqlalchemy import DateTime, Float, Integer, String, func
@@ -16,11 +18,14 @@ class Address(Base):
     country: Mapped[str] = mapped_column(String(255), nullable=False)
     latitude: Mapped[float] = mapped_column(Float, nullable=False)
     longitude: Mapped[float] = mapped_column(Float, nullable=False)
+
+    # Timestamps are set by the database engine, not the application
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
         nullable=False,
     )
+    # onupdate automatically refreshes this field on every UPDATE
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
